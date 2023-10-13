@@ -1,0 +1,10 @@
+.custom-label {
+    font-size: 12px;
+    -unity-font-style: bold;
+    color: rgb(68, 138, 255);
+}
+.custom-button {
+    -unity-font-style:bold;
+    font-size: 30px;
+    
+}
