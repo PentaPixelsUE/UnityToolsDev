@@ -1,7 +1,8 @@
+using System;
 using System.Collections.Generic;
-using Unity.VisualScripting;
+using Unity.Mathematics;
 using UnityEditor;
-using UnityEditor.Rendering.Fullscreen.ShaderGraph;
+using UnityEditor.Rendering;
 using UnityEditor.VersionControl;
 using UnityEngine;
 using UnityEngine.UIElements;
@@ -19,10 +20,6 @@ public class Material_Creator : EditorWindow
         wnd.titleContent = new GUIContent("Material_Creator");
     }
 
- 
-    
-    
-    
     public void CreateGUI()
     {
         // Each editor window contains a root VisualElement object
@@ -37,12 +34,13 @@ public class Material_Creator : EditorWindow
         root.Add(labelFromUXML);
 
         // Get the button element from the UXML by name
-        Button button = root.Q<Button>("GenerateMat");
-
+        Button Generate = root.Q<Button>("GenerateMat");
+        Button Assign = root.Q<Button>("AssignMat");
         // Add an event handler to the button
-        button.clicked += () =>
+
+        Generate.clicked += () =>
         {
-            string parentFolder = "Assets/Scenes/ToolsDev"; // Change this to your desired parent folder path
+            string parentFolder = "Assets/Resources"; // Change this to your desired parent folder path
             string newFolderName = "Materials"; // Change this to the desired folder name
 
             // Create the new folder within the parent folder
@@ -51,6 +49,12 @@ public class Material_Creator : EditorWindow
             AssetDatabase.Refresh(); // Refresh the asset database
 
             // Check if the folder was created successfully
+            
+    
+            Dictionary<string, List<string>> AssetData = new Dictionary<string, List<string>>();
+            AssetData=ImageUtility.ImageProcessor();
+            
+            ShaderGraphUtility.MaterialVariantProcessor(AssetData);
             if (!string.IsNullOrEmpty(newFolderPath))
             {
                 Debug.Log("Folder created at: " + newFolderPath);
@@ -62,17 +66,17 @@ public class Material_Creator : EditorWindow
                     Debug.Log("Added " + newFolderPath);
                 }
             }
+            
             else
             {
                 Debug.LogError("Failed to create the folder.");
-            }
-            //ImageUtility.ImageProcessor();
-            Dictionary<string, List<string>> AssetData = new Dictionary<string, List<string>>();
-            AssetData=ImageUtility.ImageProcessor();
+            }   
             
-            ShaderGraphUtility.MaterialVariantProcessor(AssetData);
-
-        };
+            };
+            Assign.clicked += () =>
+            {
+            MaterialAssignUtility.AssignMaterials();
+            };
     }
 }
 
@@ -125,46 +129,123 @@ public class ShaderGraphUtility
         // Set the path to your Shader Graph asset
         string shaderGraphPath = "Assets/Scenes/ToolsDev/ShaderGraphs/Master_SG.shadergraph";
         Shader shader = AssetDatabase.LoadAssetAtPath<Shader>(shaderGraphPath);
-
+        
         if (shader != null)
         {
-            // Load or create a parent material (create it only once)
-            Material parentMaterial = AssetDatabase.LoadAssetAtPath<Material>("Assets/Scenes/ToolsDev/Materials/ParentMaterial.mat");
-            if (parentMaterial == null)
-            {
-                parentMaterial = new Material(shader);
-                AssetDatabase.CreateAsset(parentMaterial, "Assets/Scenes/ToolsDev/Materials/ParentMaterial.mat");
-                AssetDatabase.Refresh();
-            }
-
-            // Iterate through AssetData to create variants
+            
+           // Iterate through AssetData to create variants
             foreach (var kvp in AssetData)
             {
                 string objectName = kvp.Key;
                 List<string> maps = kvp.Value;
-
+                
                 // Create a new Material variant based on the parent
-                Material materialVariant = new Material(parentMaterial);
-
+                Material materialVariant = new Material(shader);
+                
+                
                 // Customize the variant properties (e.g., map settings)
                 foreach (string map in maps)
                 {
-                    // Set properties based on map or objectName
-                    // Example: materialVariant.SetFloat(map, 1.0f);
+                    // Load the texture based on the map name (assuming textures are in the same folder)
+                    string texturePath = $"Assets/Scenes/ToolsDev/Textures/{objectName}/{objectName}_{map}";
+
+                    // Try loading a PNG texture
+                    
+                    Texture2D texture = AssetDatabase.LoadAssetAtPath<Texture2D>($"{texturePath}.jpg");
+                    Debug.LogWarning($"{texturePath} loaded");
+                   
+                    if (texture == null)
+                    {
+                        // If PNG texture is not found, try loading a JPG texture
+                        texture = AssetDatabase.LoadAssetAtPath<Texture2D>($"{texturePath}.png");
+                        
+                    }
+                   
+
+                    if (texture != null)
+                    {
+                        // Set the texture as a shader property
+                        materialVariant.SetTexture("_"+map, texture);
+                    
+                    }
+
+                    else
+                    {
+                        Debug.LogError($"Texture not found for {map} of {objectName}");
+                    }
+                   
                 }
 
-                // Save the variant Material
-                string variantPath = $"Assets/Scenes/ToolsDev/Materials/{objectName}_Variant.mat";
+                string variantPath = $"Assets/Resources/Materials/{objectName}_Variant.mat";
                 AssetDatabase.CreateAsset(materialVariant, variantPath);
-            }
+                
 
             // Refresh the asset database
             AssetDatabase.Refresh();
+    
+            }
         }
+        
+    
         else
         {
             Debug.LogError("Shader not found at " + shaderGraphPath);
         }
+    
     }
+}
+
+
+
+
+
+
+public class MaterialAssignUtility
+{
+     public static void AssignMaterials()
+     {
+        
+        // Load the prefab from the Resources folder
+        //string[] guids = AssetDatabase.FindAssets("t:material", new[] { "Assets/Scenes/ToolsDev/Materials" });
+        Material[]materials = Resources.LoadAll<Material>("Materials");
+
+        foreach(var mat in materials){
+        
+
+        var prefab = Resources.Load<GameObject>("Meshes/village house kit");
+        
+        if (prefab != null)
+        {
+            // Access all children of the prefab
+            Transform[] children = prefab.GetComponentsInChildren<Transform>();
+
+            foreach (Transform child in children)
+            {
+                
+                // Do something with each child
+                MeshRenderer[] meshRenderers = child.GetComponentsInChildren<MeshRenderer>();
+                int elements= meshRenderers.Length;
+
+                Debug.LogWarning($"{mat} has {elements}componenets");
+                //child.gameObject.GetComponent<MeshRenderer>()=
+                string[] parts=mat.name.Split('_');
+                string materialname= parts[0];
+                if(child.name == materialname)
+                {
+                child.GetComponent<MeshRenderer>().material = mat;
+                
+                        // Log the child name and material name once
+                        Debug.Log($"Child name:   {child.name} {materialname} ");
+                }
+            }
+        }
+    
+        else
+        {
+            Debug.Log("ERROR: Prefab not found");
+        }
+    }
+    }
+    
 }
 

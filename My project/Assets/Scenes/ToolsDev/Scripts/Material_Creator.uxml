@@ -2,5 +2,6 @@
     <Style src="project://database/Assets/Scenes/ToolsDev/Scripts/Material_Creator.uss?fileID=7433441132597879392&amp;guid=18395ba8e59791544945cff4aa6c7916&amp;type=3#Material_Creator" />
     <ui:Label text="Hello World! From UXML" />
     <ui:Label text="Hello World! With Style" class="custom-label" />
-    <ui:Button name="GenerateMat" text="Hello" class="custom-button" />
+    <ui:Button name="GenerateMat" text="Create Materials !" class="custom-button" />
+    <ui:Button name="AssignMat" text="Assign Materials ! " class="custom-button_assign" />
 </ui:UXML>
