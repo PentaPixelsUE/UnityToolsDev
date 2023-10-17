@@ -58,13 +58,13 @@ Material:
         m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
-    - _Multi: 0.16
+    - _Multi: 0
     - _QueueControl: 0
     - _QueueOffset: 0
-    - _RoughnessMulti: -0.4
+    - _RoughnessMulti: 0
     m_Colors: []
   m_BuildTextureStacks: []
---- !u!114 &5357847771751762580
+--- !u!114 &6408659585835087439
 MonoBehaviour:
   m_ObjectHideFlags: 11
   m_CorrespondingSourceObject: {fileID: 0}

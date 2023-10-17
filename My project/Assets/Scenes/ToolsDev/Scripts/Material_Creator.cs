@@ -3,8 +3,7 @@ using UnityEditor;
 using UnityEngine;
 using UnityEngine.UIElements;
 using System.IO;
-using System.Linq;
-using UnityEngine.Rendering;
+
 
 
 
@@ -14,30 +13,32 @@ public class Material_Creator : EditorWindow
     [SerializeField]
     private VisualTreeAsset m_VisualTreeAsset = default;
 
-    [MenuItem("Window/UI Toolkit/Material_Creator")]
+    [MenuItem("Window/UI Toolkit/Material Creator Tool")]
     public static void ShowExample()
     {
         Material_Creator wnd = GetWindow<Material_Creator>();
-        wnd.titleContent = new GUIContent("Material_Creator");
+        wnd.titleContent = new GUIContent("Material Creator Tool");
     }
 
     public void CreateGUI()
-    {
+    {   
         // Instantiate UXML
         VisualElement root = rootVisualElement;
         VisualElement labelFromUXML = m_VisualTreeAsset.Instantiate();
         root.Add(labelFromUXML);
-
+        
         // Get the button elements from the UXML by name
         Button Generate = root.Q<Button>("GenerateMat");
         Button Assign = root.Q<Button>("AssignMat");
-
+       
         // Add an event handler to the "Generate" button
         Generate.clicked += () =>
         {
+            
             string parentFolder = "Assets/Resources"; // Change this to your desired parent folder path
             string newFolderName = "Materials"; // Change this to the desired folder name
             string newFolderPath = parentFolder + "/" + newFolderName;
+                        
 
             // Check if the "Materials" folder already exists
             if (!AssetDatabase.IsValidFolder(newFolderPath))
@@ -46,8 +47,11 @@ public class Material_Creator : EditorWindow
                 string newFolderGUID = AssetDatabase.CreateFolder(parentFolder, newFolderName);
                 newFolderPath = AssetDatabase.GUIDToAssetPath(newFolderGUID);
                 AssetDatabase.Refresh(); // Refresh the asset database
-
+                
                 // Check if the folder was created successfully
+                 Dictionary<string, List<string>> AssetData = new Dictionary<string, List<string>>();
+                AssetData = ImageUtility.ImageProcessor();
+                ShaderGraphUtility.MaterialVariantProcessor(AssetData);
                 if (!string.IsNullOrEmpty(newFolderPath))
                 {
                     Debug.Log("Folder created at: " + newFolderPath);
@@ -69,19 +73,19 @@ public class Material_Creator : EditorWindow
                 Debug.Log("Materials folder already exists at: " + newFolderPath);
             }
 
-            Dictionary<string, List<string>> AssetData = new Dictionary<string, List<string>>();
-            AssetData = ImageUtility.ImageProcessor();
-
-            ShaderGraphUtility.MaterialVariantProcessor(AssetData);
         };
-
-        // Add an event handler to the "Assign" button
         Assign.clicked += () =>
         {
             MaterialAssignUtility.AssignMaterials();
+
         };
     }
+    
+       
+    
 }
+
+
 
 
 public class ImageUtility

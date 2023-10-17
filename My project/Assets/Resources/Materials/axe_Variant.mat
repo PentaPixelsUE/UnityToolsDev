@@ -64,7 +64,7 @@ Material:
     - _RoughnessMulti: 0
     m_Colors: []
   m_BuildTextureStacks: []
---- !u!114 &1284976848489893581
+--- !u!114 &6834012201445879705
 MonoBehaviour:
   m_ObjectHideFlags: 11
   m_CorrespondingSourceObject: {fileID: 0}
