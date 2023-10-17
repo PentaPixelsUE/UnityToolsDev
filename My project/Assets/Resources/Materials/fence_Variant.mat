@@ -1,6 +1,6 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
---- !u!114 &-4926469742060861969
+--- !u!114 &-6133793797418778370
 MonoBehaviour:
   m_ObjectHideFlags: 11
   m_CorrespondingSourceObject: {fileID: 0}
@@ -38,19 +38,19 @@ Material:
     serializedVersion: 3
     m_TexEnvs:
     - _BaseColor:
-        m_Texture: {fileID: 2800000, guid: 090b7c57962d15645bc70a840970ed95, type: 3}
+        m_Texture: {fileID: 2800000, guid: 4b4d249ee7f386c45b182c1a7df51766, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _Metallic:
-        m_Texture: {fileID: 2800000, guid: 0d50598ad7a2e174da6b46d212201d78, type: 3}
+        m_Texture: {fileID: 2800000, guid: eeebe7404bd05194782d6520c2bfa9db, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _Normal:
-        m_Texture: {fileID: 2800000, guid: 1e138c32d681fcc4d85cf64bae6e8fdc, type: 3}
+        m_Texture: {fileID: 2800000, guid: 9e669ff96fa5ced4ba9a163080f66a45, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _Roughness:
-        m_Texture: {fileID: 2800000, guid: ab86946baa02fe74f812da8a124fe6b0, type: 3}
+        m_Texture: {fileID: 2800000, guid: a9e57f01fb147824aaded4e2085b2317, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _opacity:
@@ -74,5 +74,6 @@ Material:
     - _Multi: 0
     - _QueueControl: 0
     - _QueueOffset: 0
+    - _RoughnessMulti: 0.5
     m_Colors: []
   m_BuildTextureStacks: []

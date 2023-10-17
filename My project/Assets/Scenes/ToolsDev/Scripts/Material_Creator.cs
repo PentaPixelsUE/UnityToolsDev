@@ -1,11 +1,12 @@
-using System;
 using System.Collections.Generic;
-using Unity.Mathematics;
 using UnityEditor;
-using UnityEditor.Rendering;
-using UnityEditor.VersionControl;
 using UnityEngine;
 using UnityEngine.UIElements;
+using System.IO;
+using System.Linq;
+using UnityEngine.Rendering;
+
+
 
 
 public class Material_Creator : EditorWindow
@@ -22,63 +23,66 @@ public class Material_Creator : EditorWindow
 
     public void CreateGUI()
     {
-        // Each editor window contains a root VisualElement object
-        VisualElement root = rootVisualElement;
-
-        // VisualElements objects can contain other VisualElement following a tree hierarchy.
-        VisualElement label = new Label("Hello World! From C#");
-        root.Add(label);
-
         // Instantiate UXML
+        VisualElement root = rootVisualElement;
         VisualElement labelFromUXML = m_VisualTreeAsset.Instantiate();
         root.Add(labelFromUXML);
 
-        // Get the button element from the UXML by name
+        // Get the button elements from the UXML by name
         Button Generate = root.Q<Button>("GenerateMat");
         Button Assign = root.Q<Button>("AssignMat");
-        // Add an event handler to the button
 
+        // Add an event handler to the "Generate" button
         Generate.clicked += () =>
         {
             string parentFolder = "Assets/Resources"; // Change this to your desired parent folder path
             string newFolderName = "Materials"; // Change this to the desired folder name
+            string newFolderPath = parentFolder + "/" + newFolderName;
 
-            // Create the new folder within the parent folder
-            string newFolderGUID = AssetDatabase.CreateFolder(parentFolder, newFolderName);
-            string newFolderPath = AssetDatabase.GUIDToAssetPath(newFolderGUID);
-            AssetDatabase.Refresh(); // Refresh the asset database
-
-            // Check if the folder was created successfully
-            
-    
-            Dictionary<string, List<string>> AssetData = new Dictionary<string, List<string>>();
-            AssetData=ImageUtility.ImageProcessor();
-            
-            ShaderGraphUtility.MaterialVariantProcessor(AssetData);
-            if (!string.IsNullOrEmpty(newFolderPath))
+            // Check if the "Materials" folder already exists
+            if (!AssetDatabase.IsValidFolder(newFolderPath))
             {
-                Debug.Log("Folder created at: " + newFolderPath);
+                // If the folder doesn't exist, create it
+                string newFolderGUID = AssetDatabase.CreateFolder(parentFolder, newFolderName);
+                newFolderPath = AssetDatabase.GUIDToAssetPath(newFolderGUID);
+                AssetDatabase.Refresh(); // Refresh the asset database
 
-                // Show a warning dialog
-                bool result = EditorUtility.DisplayDialog("Warning", "Materials Created!", "OK");
-                if (result)
+                // Check if the folder was created successfully
+                if (!string.IsNullOrEmpty(newFolderPath))
                 {
-                    Debug.Log("Added " + newFolderPath);
+                    Debug.Log("Folder created at: " + newFolderPath);
+
+                    // Show a warning dialog
+                    bool result = EditorUtility.DisplayDialog("Warning", "Materials Created!", "OK");
+                    if (result)
+                    {
+                        Debug.Log("Added " + newFolderPath);
+                    }
+                }
+                else
+                {
+                    Debug.LogError("Failed to create the folder.");
                 }
             }
-            
             else
             {
-                Debug.LogError("Failed to create the folder.");
-            }   
-            
-            };
-            Assign.clicked += () =>
-            {
+                Debug.Log("Materials folder already exists at: " + newFolderPath);
+            }
+
+            Dictionary<string, List<string>> AssetData = new Dictionary<string, List<string>>();
+            AssetData = ImageUtility.ImageProcessor();
+
+            ShaderGraphUtility.MaterialVariantProcessor(AssetData);
+        };
+
+        // Add an event handler to the "Assign" button
+        Assign.clicked += () =>
+        {
             MaterialAssignUtility.AssignMaterials();
-            };
+        };
     }
 }
+
 
 public class ImageUtility
 {
@@ -145,36 +149,35 @@ public class ShaderGraphUtility
                 
                 // Customize the variant properties (e.g., map settings)
                 foreach (string map in maps)
-                {
-                    // Load the texture based on the map name (assuming textures are in the same folder)
-                    string texturePath = $"Assets/Scenes/ToolsDev/Textures/{objectName}/{objectName}_{map}";
-
-                    // Try loading a PNG texture
-                    
-                    Texture2D texture = AssetDatabase.LoadAssetAtPath<Texture2D>($"{texturePath}.jpg");
-                    Debug.LogWarning($"{texturePath} loaded");
-                   
-                    if (texture == null)
                     {
-                        // If PNG texture is not found, try loading a JPG texture
-                        texture = AssetDatabase.LoadAssetAtPath<Texture2D>($"{texturePath}.png");
-                        
-                    }
-                   
+                        int texturecounter = 0;
+                        string searchPattern = $"{objectName}_{map}.*";
 
-                    if (texture != null)
-                    {
-                        // Set the texture as a shader property
-                        materialVariant.SetTexture("_"+map, texture);
-                    
+                        // Search for textures in subdirectories
+                        string[] texturePaths = Directory.GetFiles("Assets/Scenes/ToolsDev/Textures", searchPattern, SearchOption.AllDirectories);
+
+                        if (texturecounter < texturePaths.Length)
+                        {
+                            string texturePath = texturePaths[texturecounter];
+
+                            // Try loading the texture
+                            Texture2D texture = AssetDatabase.LoadAssetAtPath<Texture2D>(texturePath);
+
+                            if (texture != null)
+                            {
+                                // Set the texture as a shader property
+                                materialVariant.SetTexture("_" + map, texture);
+                                Debug.Log($"{map} texture loaded for {objectName}");
+                            }
+                            else
+                            {
+                                Debug.LogError($"Texture not found for {map} of {objectName}");
+                            }
+                        }
+
+                        ++texturecounter;
                     }
 
-                    else
-                    {
-                        Debug.LogError($"Texture not found for {map} of {objectName}");
-                    }
-                   
-                }
 
                 string variantPath = $"Assets/Resources/Materials/{objectName}_Variant.mat";
                 AssetDatabase.CreateAsset(materialVariant, variantPath);
@@ -194,58 +197,61 @@ public class ShaderGraphUtility
     
     }
 }
-
-
-
-
-
-
 public class MaterialAssignUtility
 {
-     public static void AssignMaterials()
-     {
-        
-        // Load the prefab from the Resources folder
-        //string[] guids = AssetDatabase.FindAssets("t:material", new[] { "Assets/Scenes/ToolsDev/Materials" });
-        Material[]materials = Resources.LoadAll<Material>("Materials");
-
-        foreach(var mat in materials){
-        
-
+    public static void AssignMaterials()
+    {
+        Material[] materials = Resources.LoadAll<Material>("Materials");
         var prefab = Resources.Load<GameObject>("Meshes/village house kit");
-        
+
         if (prefab != null)
         {
-            // Access all children of the prefab
-            Transform[] children = prefab.GetComponentsInChildren<Transform>();
-
-            foreach (Transform child in children)
+            foreach (Material mat in materials)
             {
-                
-                // Do something with each child
-                MeshRenderer[] meshRenderers = child.GetComponentsInChildren<MeshRenderer>();
-                int elements= meshRenderers.Length;
+                Transform[] children = prefab.GetComponentsInChildren<Transform>();
 
-                Debug.LogWarning($"{mat} has {elements}componenets");
-                //child.gameObject.GetComponent<MeshRenderer>()=
-                string[] parts=mat.name.Split('_');
-                string materialname= parts[0];
-                if(child.name == materialname)
+                foreach (Transform child in children)
                 {
-                child.GetComponent<MeshRenderer>().material = mat;
-                
-                        // Log the child name and material name once
-                        Debug.Log($"Child name:   {child.name} {materialname} ");
+                    string[] parts = mat.name.Split('_');
+                    string materialName = parts[0];
+
+                    if (child.name == materialName)
+                    {
+                        Debug.Log($"Child {child.name}_{materialName}");
+                    }
+
+                    // Create an array of materials for the child
+                    Material[] childMaterials = child.GetComponentInChildren<MeshRenderer>().sharedMaterials;
+
+                    bool assigned = false;
+
+                    for (int i = 0; i < childMaterials.Length; i++)
+                    {
+                        if (i == 0 && childMaterials[i].name == materialName)
+                        {
+                            childMaterials[i] = mat;
+                            assigned = true;
+                            Debug.Log($"Assigned material {mat.name} to element {i} of {child.name}");
+                        }
+                        if (i == 1 && childMaterials[i].name == materialName)
+                        {
+                            childMaterials[i] = mat;
+                            assigned = true;
+                            Debug.Log($"Assigned material {mat.name} to element {i} of {child.name}");
+                        }
+                    }
+
+                    if (assigned)
+                    {
+                        child.GetComponentInChildren<MeshRenderer>().sharedMaterials = childMaterials;
+                    }
                 }
             }
         }
-    
         else
         {
             Debug.Log("ERROR: Prefab not found");
         }
     }
-    }
-    
 }
 

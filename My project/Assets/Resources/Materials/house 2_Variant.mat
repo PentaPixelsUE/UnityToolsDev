@@ -61,9 +61,10 @@ Material:
     - _Multi: 0
     - _QueueControl: 0
     - _QueueOffset: 0
+    - _RoughnessMulti: 0
     m_Colors: []
   m_BuildTextureStacks: []
---- !u!114 &6753886501742463020
+--- !u!114 &1390507878180247414
 MonoBehaviour:
   m_ObjectHideFlags: 11
   m_CorrespondingSourceObject: {fileID: 0}
